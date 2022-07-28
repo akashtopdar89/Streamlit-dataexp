@@ -5,19 +5,41 @@ import numpy as np
 from wordcloud import WordCloud
 import matplotlib.pyplot as plt
 
+from wordcloud import WordCloud, STOPWORDS, ImageColorGenerator
+import nltk
+
+import plotly.express as px
+from plotly.subplots import make_subplots
+import plotly.graph_objects as go
+
+
 import warnings
 warnings.filterwarnings('ignore')
+showWarningOnDirectExecution = 'false'
 
-st.title('LAPPS Streamlit')
+
+
+
+col2, col3 = st.columns([6,1])
+
+
+with col2:
+	st.header('TABA Streamlit Group Assignment')
+
+	st.sidebar.title('Explore Dataset')
+
+	
+
+with col3:
+	st.image('ISB_logo.png')
 
 def explore(df):
-	# DATA
+	st.write('Scroll down to explore more about data')
 	st.write('Data:')
 	st.write(df)
-	# SUMMARY
 	df_types = pd.DataFrame(df.dtypes, columns=['Data Type'])
-	numerical_cols = df_types[~df_types['Data Type'].isin(['object',
-	           'bool'])].index.values
+	numerical_cols = df_types[~df_types['Data Type'].isin(['object', 'bool'])].index.values
+	print(numerical_cols)
 	df_types['Count'] = df.count()
 	df_types['Unique Values'] = df.nunique()
 	df_types['Min'] = df[numerical_cols].min()
@@ -28,55 +50,50 @@ def explore(df):
 	st.write('Summary:')
 	st.write(df_types.astype(str))
 
-
 def transform(df):
-	# Select sample size
-	# frac = st.slider('Random sample (%)', 1, 100, 100)
-	# if frac < 100:
-	# 	df = df.sample(frac=frac/100)
-	# Select columns
-	cols = st.multiselect('Columns', 
-	                    df.columns.tolist(),
-	                    df.columns.tolist())
-	# print(cols)
+	
+	df_cat = df.select_dtypes(include='object')
+	cols = st.multiselect('Columns', df_cat.columns.tolist(), df_cat.columns.tolist())
 	df = df[cols]
-	# print(df[1])
-	# df1 = df[cols].values()
-	# option = st.selectbox(“Select option”, CHOICES.keys(), format_func=lambda x:CHOICES[ x ])
-	# topic = st.selectbox('select topic',['topic1','topic2','topic3'])
-	# Create some sample text
-	# text = 'Fun, fun, awesome, awesome, tubular, astounding, superb, great, amazing, amazing, amazing, amazing'
-
-	# Create and generate a word cloud image:
-	# option = st.selectbox(cols) #option is stored in this variable
+	st.write('Select a column from Sidebar Dropdown to see wordcloud')
+	stopwords = set(STOPWORDS)
+	stopwords.update(['us', 'one', 'will', 'said', 'now', 'well', 'man', 'may', 'little', 'say', 'must', 'way', 'long', 'yet', 'mean','put', 'seem', 'asked', 'made', 'half', 'much', 'certainly', 'might', 'came'])
 	llist = st.sidebar.selectbox("Select Column", cols)
-	# years = df["year"].loc[df["make"] == llist]
-	print(llist)
-	col_one_list = df['Review'].tolist()
+	col_one_list = df[llist].tolist()
 	str1 = ""
 	# traverse in the string 
 	for i in col_one_list:
-	    str1 += i
+		str1 += i
 
+	wordcloud = WordCloud( background_color = 'white',max_words = 100, max_font_size = 256,).generate(str1)
 
-
-	wordcloud = WordCloud().generate(str1)
-
-	# # Display the generated image:
-	plt.imshow(wordcloud, interpolation='bilinear')
+	fig, ax = plt.subplots(figsize = (12, 8))
+	ax.imshow(wordcloud)
 	plt.axis("off")
-	plt.show()
-	st.pyplot()
-	# st.set_option('deprecation.showPyplotGlobalUse', False)
+	st.pyplot(fig)
 
-	# return df
 
+def histogram_df(df):
+
+	df_numerical = df.select_dtypes(include='int64')
+	cols = st.multiselect('Columns', df_numerical.columns.tolist(), df_numerical.columns.tolist())
+	df = df[cols]
+	llist = st.sidebar.selectbox("Select Column", cols)
+	print(llist,'here')
+	col_one_list = df[llist].tolist()
+	print(len(col_one_list))
+	for i in col_one_list: #Since VARS is a list, it does one element at a time from the list
+		# print(i)
+		x_label = i
+    #Labelling the X axis
+		fig=px.histogram(df, x = i, labels = {'x' : x_label, 'y' : 'Count'})
+		# Defining the plotly object of a histogram
+		
+		st.plotly_chart(fig)
 
 def get_df(file):
-	# get extension and read file
 	extension = file.name.split('.')[1]
 	if extension.upper() == 'CSV':
-		# df = pd.read_csv(file)
 		df = pd.read_csv(file, encoding='cp1252')
 	elif extension.upper() == 'XLSX':
 		df = pd.read_excel(file, engine='openpyxl')
@@ -84,32 +101,37 @@ def get_df(file):
 		df = pd.read_pickle(file)
 	return df
 
+
 def main():
-  # st.title('Explore a dataset')
-  st.write('A general purpose data exploration app')
-  file = st.sidebar.file_uploader("Upload file", type=['csv', 
-                                               'xlsx', 
-                                               'pickle'])
-  if not file:
-    st.sidebar.write("Upload a .csv or .xlsx file to get started")
-    return
-  df = get_df(file)
-  task = st.sidebar.radio('Task', ['Explore', 'Transform'], 0)
-  if task == 'Explore':
-    explore(df)
-  else:
-    dd=transform(df)
-    # st.write(dd)
+
+	st.write('A general purpose data exploration app')
+	file = st.sidebar.file_uploader("Upload file", type=['csv',	'xlsx', 'pickle'])
+	if not file:
+		st.write('Upload excel or csv file to explore')
+		st.sidebar.write("Upload a .csv or .xlsx file to get started")
+		st.sidebar.subheader('Group Members:')
+		st.sidebar.write('Akash Topdar - ')
+		st.sidebar.write('Lalith Sharma - ')
+		st.sidebar.write('Prajukta Pradhan - ')
+		st.sidebar.write('Pranjal Kumar Srivastava - ')
+		st.sidebar.write('Sumith Tatipally - ')
+		return
+	df = get_df(file)
+	task = st.sidebar.radio('Navigation', ['Explore', 'WordCloud'], 0)
+	if task == 'Explore':
+		explore(df)
+	# elif task=='Histogram':
+	# 	histogram_df(df)
+	else:
+		dd=transform(df)
+		# st.write(dd)
 
 
 
-# FILE_ADDRESS = st.sidebar.file_uploader('Upload file')
-# This variable takes the filepath after a GUI window allows you to select files from a file explorer.
+# st.sidebar.image("ISB_logo.png", use_column_width=True)
 
-st.sidebar.image("ISB_logo.png", use_column_width=True)
 
-st.sidebar.title('Explore Dataset')
-# This is the title for the sidebar of the webpage, and stays static, based on current settings. 
-# The column functionality which has been commented out further on allows the title of the main page to be dynamic.
+
 
 main()
+
