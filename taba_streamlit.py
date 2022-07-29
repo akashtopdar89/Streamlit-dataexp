@@ -57,7 +57,7 @@ def transform(df):
 	df = df[cols]
 	st.write('Select a column from Sidebar Dropdown to see wordcloud')
 	stopwords = set(STOPWORDS)
-	stopwords.update(['us', 'one', 'will', 'said', 'now', 'well', 'man', 'may', 'little', 'say', 'must', 'way', 'long', 'yet', 'mean','put', 'seem', 'asked', 'made', 'half', 'much', 'certainly', 'might', 'came'])
+	stopwords.update(['us', 'one', 'Uber', 'will', 'said', 'now', 'well', 'man', 'may', 'little', 'say', 'must', 'way', 'long', 'yet', 'mean','put', 'seem', 'asked', 'made', 'half', 'much', 'certainly', 'might', 'came'])
 	llist = st.sidebar.selectbox("Select Column", cols)
 	col_one_list = df[llist].tolist()
 	str1 = ""
